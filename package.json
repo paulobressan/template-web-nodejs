@@ -1,0 +1,56 @@
+{
+  "name": "erp-food-web",
+  "version": "1.0.0",
+  "description": "Erp para gerenciar empresas",
+  "main": "index.js",
+  "scripts": {
+    "test": "ts-node jest.startup.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://paulo_bressan@bitbucket.org/paulo_bressan/erp-food-web.git"
+  },
+  "jest":{
+    "globals": {
+      "address": "http://localhost:4001",
+      "auth": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBlbWFpbC5jb20iLCJpYXQiOjE1MTYyMzkwMjIsImlzcyI6Im1lYXQtYXBpIn0.gxZMWw7H3yzTncMaJSCAudEjremRECIrvKb-TxiYrxE"
+    },
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  },
+  "author": "Paulo Bressan",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/paulo_bressan/erp-food-web#readme",
+  "dependencies": {
+    "bcrypt": "^3.0.2",
+    "mongoose": "^5.2.6",
+    "restify": "^7.3.0",
+    "restify-errors": "^6.1.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^3.0.0",
+    "@types/jest": "^23.3.10",
+    "@types/jest-cli": "^23.6.0",
+    "@types/mongoose": "^5.3.5",
+    "@types/restify": "^7.2.6",
+    "@types/restify-errors": "^4.3.3",
+    "@types/supertest": "^2.0.7",
+    "jest": "^23.6.0",
+    "jest-cli": "^23.6.0",
+    "supertest": "^3.3.0",
+    "ts-jest": "^23.10.5",
+    "ts-node": "^5.0.1",
+    "typescript": "^3.2.2"
+  }
+}
