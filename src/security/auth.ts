@@ -1,10 +1,10 @@
-import * as restify from 'restify'
+import * as express from 'express'
 import { User } from '../users/users.model';
-import { NotAuthorizedError } from 'restify-errors'
 import * as jwt from 'jsonwebtoken'
-import { environment } from '../common/environment';
+import { environment } from '../../common/environment'
+import { UnauthorizedError } from '../../common/error';
 
-export const authenticate: restify.RequestHandler = (req: restify.Request, resp: restify.Response, next: restify.Next) => {
+export const authenticate: express.RequestHandler = (req: express.Request, resp: express.Response, next: express.NextFunction) => {
     const { login, email, password } = req.body
     User.findByEmailOrLogin(login, email, '+password')
         .then(user => {
@@ -17,7 +17,7 @@ export const authenticate: restify.RequestHandler = (req: restify.Request, resp:
                 })
                 return next(false)
             } else
-                return next(new NotAuthorizedError('Usuário ou senha incorreto'))
+                return next(new UnauthorizedError('Usuário ou senha incorreto'))
 
         })
         .catch(next)

@@ -11,6 +11,10 @@ exports.environment = {
     secutiry: {
         saltRounds: process.env.SALT_ROUNDS || 10,
         jwtSecret: process.env.JWT_SECRET || 'secret-erp-food-web'
+    },
+    log: {
+        name: 'erp-food-web',
+        level: process.env.LOG_LEVEL || 'debug'
     }
 };
 //# sourceMappingURL=environment.js.map

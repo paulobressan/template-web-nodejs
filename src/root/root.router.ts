@@ -1,5 +1,5 @@
-import * as restify from 'restify'
-import { Router } from '../common/router';
+import * as express from 'express'
+import { Router } from '../../common/router';
 import { RootModel } from './root.model';
 
 class RootRouter extends Router {
@@ -11,8 +11,8 @@ class RootRouter extends Router {
         )
     }
 
-    apply(application: restify.Server): void {
-        application.get('/', (req: restify.Request, resp: restify.Response, next: restify.Next) => {
+    apply(application: express.Application): void {
+        application.get('/', (req: express.Request, resp: express.Response, next: express.NextFunction) => {
             resp.json(this.routes)
             next()
         })

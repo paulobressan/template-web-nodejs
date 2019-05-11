@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose = require("mongoose");
-const restify_errors_1 = require("restify-errors");
 const router_1 = require("./router");
 const environment_1 = require("./environment");
+const error_1 = require("./error");
 class ModelRouter extends router_1.Router {
     constructor(model) {
         super();
         this.model = model;
         this.validateId = (req, resp, next) => {
             if (!mongoose.Types.ObjectId.isValid(req.params.id))
-                next(new restify_errors_1.NotFoundError('Documento não encontrado'));
+                next(new error_1.NotFoundError('Documento não encontrado'));
             next();
         };
         this.findAll = (req, resp, next) => {
@@ -84,6 +84,27 @@ class ModelRouter extends router_1.Router {
                 resource._links.next = `${this.basePath}?_page=${options.page + 1}`;
         }
         return resource;
+    }
+    /**
+     * Validar o schema passado e tratar os possivel erros
+     * @param schema Schema de validação de entrada da rota
+     */
+    validateSchema(schema) {
+        return (req, resp, next) => {
+            let body = req.body;
+            const result = schema.validate(body, { abortEarly: false });
+            if (!result.error)
+                next();
+            else {
+                let errors = [];
+                for (let m of result.error.details) {
+                    errors.push(m.message);
+                }
+                let error = new error_1.BadRequest('Invalid Data');
+                error.errors = errors;
+                next(error);
+            }
+        };
     }
 }
 exports.ModelRouter = ModelRouter;

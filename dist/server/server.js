@@ -1,10 +1,22 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const restify = require("restify");
+const express = require("express");
 const mongoose = require("mongoose");
 const environment_1 = require("../common/environment");
 const error_handler_1 = require("./error.handler");
-const merge_patch_parser_1 = require("./merge-patch.parser");
+const logger_1 = require("../common/logger");
+const expressPinoLogger = require("express-pino-logger");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const token_parser_1 = require("../src/security/token.parser");
 class Server {
     initDb() {
         mongoose.Promise = global.Promise;
@@ -18,18 +30,16 @@ class Server {
     initRoutes(routes) {
         return new Promise((resolve, reject) => {
             try {
-                const options = {
-                    name: 'erp-food-web',
-                    version: '1.0.0'
-                };
-                this.application = restify.createServer(options);
-                this.application.use(restify.plugins.bodyParser());
-                this.application.use(restify.plugins.queryParser());
-                this.application.use(merge_patch_parser_1.mergePatchBodyParser);
+                this.application = express();
+                this.application.use(expressPinoLogger({ logger: logger_1.logger }));
+                this.application.use(cors());
+                this.application.use(bodyParser.urlencoded({ extended: true }));
+                this.application.use(bodyParser.json());
+                this.application.use(token_parser_1.tokenParser);
                 for (let route of routes) {
                     route.apply(this.application);
                 }
-                this.application.on('restifyError', error_handler_1.handlerError);
+                this.application.use(error_handler_1.handlerError);
                 this.application.listen(environment_1.environment.server.port, () => {
                     resolve(this.application);
                 });
@@ -40,12 +50,17 @@ class Server {
         });
     }
     bootstrap(routes = []) {
-        return this.initDb()
-            .then(() => this.initRoutes(routes))
-            .then(() => this);
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.initDb();
+            yield this.initRoutes(routes);
+            return this;
+        });
     }
     shutDown() {
-        return mongoose.disconnect().then(() => this.application.close());
+        return __awaiter(this, void 0, void 0, function* () {
+            yield mongoose.disconnect();
+            return process.exit();
+        });
     }
 }
 exports.Server = Server;

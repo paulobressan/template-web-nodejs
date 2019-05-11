@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose'
-import * as restify from 'restify'
-import { NotFoundError } from 'restify-errors'
+import * as express from 'express'
 import { Router } from './router';
 import { environment } from './environment';
-import { exec } from 'child_process';
+import { NotFoundError, BadRequest } from './error';
+import * as joi from 'joi'
 
 export abstract class ModelRouter<D extends mongoose.Document> extends Router {
     basePath: string
@@ -46,13 +46,35 @@ export abstract class ModelRouter<D extends mongoose.Document> extends Router {
         return resource
     }
 
-    validateId: restify.RequestHandler = (req: restify.Request, resp: restify.Response, next: restify.Next) => {
+    validateId: express.RequestHandler = (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         if (!mongoose.Types.ObjectId.isValid(req.params.id))
             next(new NotFoundError('Documento não encontrado'))
         next()
     }
 
-    findAll: restify.RequestHandler = (req: restify.Request, resp: restify.Response, next: restify.Next) => {
+    /**
+     * Validar o schema passado e tratar os possivel erros
+     * @param schema Schema de validação de entrada da rota
+     */
+    validateSchema(schema: joi.Schema): express.RequestHandler {
+        return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+            let body = req.body
+            const result = schema.validate(body, { abortEarly: false })
+            if (!result.error)
+                next()
+            else {
+                let errors: string[] = []
+                for (let m of result.error.details) {
+                    errors.push(m.message)
+                }
+                let error = new BadRequest('Invalid Data')
+                error.errors = errors
+                next(error)
+            }
+        }
+    }
+
+    findAll: express.RequestHandler = (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         let page = parseInt(req.query._page || 1)
         page = page > 0 ? page : 1
         let skip = this.pageSize * (page - 1)
@@ -65,20 +87,20 @@ export abstract class ModelRouter<D extends mongoose.Document> extends Router {
             .catch(next)
     }
 
-    findById: restify.RequestHandler = (req: restify.Request, resp: restify.Response, next: restify.Next) => {
+    findById: express.RequestHandler = (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         this.prepareOne(this.model.findById(req.params.id))
             .then(this.render(resp, next))
             .catch(next)
     }
 
-    save: restify.RequestHandler = (req: restify.Request, resp: restify.Response, next: restify.Next) => {
+    save: express.RequestHandler = (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         let model = new this.model(req.body)
         model.save()
             .then(this.render(resp, next))
             .catch(next)
     }
 
-    replace: restify.RequestHandler = (req: restify.Request, resp: restify.Response, next: restify.Next) => {
+    replace: express.RequestHandler = (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         const options: mongoose.QueryUpdateOptions = {
             runValidators: true,
             new: true,
@@ -89,7 +111,7 @@ export abstract class ModelRouter<D extends mongoose.Document> extends Router {
             .catch(next)
     }
 
-    update: restify.RequestHandler = (req: restify.Request, resp: restify.Response, next: restify.Next) => {
+    update: express.RequestHandler = (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         const options: mongoose.QueryUpdateOptions = {
             runValidators: true,
             new: true,

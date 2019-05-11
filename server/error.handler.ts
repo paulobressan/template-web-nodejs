@@ -1,31 +1,65 @@
-import * as restify from 'restify'
+import * as express from 'express'
+import { INTERNAL_SERVER_ERROR, BAD_REQUEST, NOT_FOUND, FORBIDDEN, UNAUTHORIZED } from 'http-status'
+import { BadRequest, NotFoundError, ForbiddenError, UnauthorizedError } from '../common/error';
 
-export const handlerError = (req: restify.Request, resp: restify.Response, err, done) => {
-    console.log(err);
-    
-    err.toJSON = () => {
-        return {
-            message: err.message,
-            statusCode: err.statusCode
-        }
+export const handlerError = (error, req: express.Request, resp: express.Response, next: express.NextFunction) => {
+    let code = INTERNAL_SERVER_ERROR;
+    let message = error.message || "Internal Error";
+
+    if (error instanceof BadRequest) {
+        code = BAD_REQUEST
+        message = errorMessage(error)
     }
 
-    switch (err.name) {
+    if (error instanceof NotFoundError) {
+        code = NOT_FOUND
+        message = errorMessage(error)
+    }
+
+    if (error instanceof ForbiddenError) {
+        code = FORBIDDEN
+        message = errorMessage(error)
+    }
+
+    if (error instanceof UnauthorizedError) {
+        code = UNAUTHORIZED
+        message = errorMessage(error)
+    }
+
+    switch (error.name) {
         case 'MongoError':
-            if (err.code === 11000)
-                err.statusCode = 400
+            if (error.code === 11000)
+                code = BAD_REQUEST
             break
         case 'ValidationError':
-            err.statusCode = 400
+            code = BAD_REQUEST
             const messages: any[] = [];
-            for (let name in err.errors) {
-                messages.push({ message: err.errors[name].message })
+            for (let name in error.errors) {
+                messages.push({ message: error.errors[name].message })
             }
-            err.toJSON = () => ({
-                message: 'Erros de validação encontrado enquanto processava sua requisição',
+            message = {
+                message: 'Validation error while processing your request',
                 errors: messages
-            })
+            }
             break
     }
-    done()
+
+    resp.status(code)
+        .json({ code, message })
+}
+
+function errorMessage(error) {
+    if (error.errors) {
+        const messages: any[] = [];
+        for (let message of error.errors) {
+            messages.push({ message })
+        }
+        return messages.length > 0
+            ? {
+                message: error.message,
+                errors: messages
+            }
+            : error.message
+    }
+    return error.message
 }

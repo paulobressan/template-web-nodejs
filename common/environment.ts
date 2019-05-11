@@ -4,10 +4,14 @@ export const environment = {
         pageSize: process.env.PAGE_SIZE || 5
     },
     db: {
-        url: process.env.URL_DB || 'mongodb://localhost/erp-food-web'        
+        url: process.env.URL_DB || 'mongodb://localhost/erp-food-web'
     },
     secutiry: {
         saltRounds: process.env.SALT_ROUNDS || 10,
         jwtSecret: process.env.JWT_SECRET || 'secret-erp-food-web'
+    },
+    log: {
+        name: 'erp-food-web',
+        level: process.env.LOG_LEVEL || 'debug'
     }
 }

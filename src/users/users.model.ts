@@ -1,12 +1,12 @@
-import * as restify from 'restify'
+import * as express from 'express'
 import * as mongoose from 'mongoose'
 import * as bcrypt from 'bcrypt'
-import { environment } from '../common/environment';
+import { environment } from '../../common/environment';
 
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: [true, 'Nome obrigatório'],
+        required: [true, 'name is required'],
         maxlength: 80,
         minlength: 3
     },
@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, 'Senha obrigatória'],
+        required: [true, 'password is required'],
         select: false,
         minlength: 8
     },
@@ -55,6 +55,7 @@ export interface User extends mongoose.Document {
     email: string,
     password: string,
     isAtivo: boolean,
+    profiles: String[],
     dateUpdate: Date,
     dateCreate: Date,
     hasAnyProfile(...profiles: string[]): boolean,
@@ -82,7 +83,7 @@ userSchema.statics.findByEmailOrLogin = function (login: string, email: string, 
     return this.findOne({ $or: [{ login }, { email }] }, projection)
 }
 
-const hashPassword = function (obj: User, next: restify.Next) {
+const hashPassword = function (obj: User, next: express.NextFunction) {
     bcrypt.hash(obj.password, environment.secutiry.saltRounds)
         .then(hash => {
             obj.password = hash
@@ -90,14 +91,14 @@ const hashPassword = function (obj: User, next: restify.Next) {
         }).catch(next)
 }
 
-const saveMiddleware = function (next: restify.Next) {
+const saveMiddleware = function (next: express.NextFunction) {
     const user: User = <User>this;
     if (!user.isModified('password'))
         next()
     else hashPassword(user, next)
 }
 
-const updateMiddleware = function (next: restify.Next) {
+const updateMiddleware = function (next: express.NextFunction) {
     if (!this.getUpdate().password) {
         next()
     } else {

@@ -2,10 +2,12 @@ import 'jest'
 import * as request from 'supertest'
 
 let address = (<any>global).address
+const auth: string = (<any>global).auth
 
 test('get /users', () => {
     return request(address)
         .get('/users')
+        .set('Authorization', auth)
         .then(response => {
             expect(response.status).toBe(200)
             expect(response.body.items).toBeInstanceOf(Array)
@@ -15,6 +17,7 @@ test('get /users', () => {
 test('post /users', () => {
     return request(address)
         .post('/users')
+        .set('Authorization', auth)
         .send({
             name: 'Usuario Teste',
             email: 'usuario@email.com',
@@ -35,6 +38,7 @@ test('post /users', () => {
 test('get /users?email', () => {
     return request(address)
         .get('/users?email=usuario@email.com')
+        .set('Authorization', auth)
         .then(response => {
             expect(response.status).toBe(200)
             expect(response.body.items).toBeInstanceOf(Array)
@@ -44,6 +48,7 @@ test('get /users?email', () => {
 test('put /users', () => {
     return request(address)
         .post('/users')
+        .set('Authorization', auth)
         .send({
             name: 'Usuario Teste',
             email: 'usuario2@email.com',
@@ -52,6 +57,7 @@ test('put /users', () => {
         })
         .then(response => request(address)
             .put(`/users/${response.body._id}`)
+            .set('Authorization', auth)
             .send({
                 name: 'usuario teste 1',
                 email: 'usuario1@email.com',
@@ -72,6 +78,7 @@ test('put /users', () => {
 test('patch /users', () => {
     return request(address)
         .post('/users')
+        .set('Authorization', auth)
         .send({
             name: 'Usuario Teste',
             email: 'usuario3@email.com',
@@ -80,6 +87,7 @@ test('patch /users', () => {
         })
         .then(response => request(address)
             .patch(`/users/${response.body._id}`)
+            .set('Authorization', auth)
             .send({
                 name: 'Usuario2 Teste2',
             }))

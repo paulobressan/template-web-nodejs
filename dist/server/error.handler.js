@@ -1,30 +1,59 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handlerError = (req, resp, err, done) => {
-    console.log(err);
-    err.toJSON = () => {
-        return {
-            message: err.message,
-            statusCode: err.statusCode
-        };
-    };
-    switch (err.name) {
+const http_status_1 = require("http-status");
+const error_1 = require("../common/error");
+exports.handlerError = (error, req, resp, next) => {
+    let code = http_status_1.INTERNAL_SERVER_ERROR;
+    let message = error.message || "Internal Error";
+    if (error instanceof error_1.BadRequest) {
+        code = http_status_1.BAD_REQUEST;
+        message = errorMessage(error);
+    }
+    if (error instanceof error_1.NotFoundError) {
+        code = http_status_1.NOT_FOUND;
+        message = errorMessage(error);
+    }
+    if (error instanceof error_1.ForbiddenError) {
+        code = http_status_1.FORBIDDEN;
+        message = errorMessage(error);
+    }
+    if (error instanceof error_1.UnauthorizedError) {
+        code = http_status_1.UNAUTHORIZED;
+        message = errorMessage(error);
+    }
+    switch (error.name) {
         case 'MongoError':
-            if (err.code === 11000)
-                err.statusCode = 400;
+            if (error.code === 11000)
+                code = http_status_1.BAD_REQUEST;
             break;
         case 'ValidationError':
-            err.statusCode = 400;
+            code = http_status_1.BAD_REQUEST;
             const messages = [];
-            for (let name in err.errors) {
-                messages.push({ message: err.errors[name].message });
+            for (let name in error.errors) {
+                messages.push({ message: error.errors[name].message });
             }
-            err.toJSON = () => ({
-                message: 'Erros de validação encontrado enquanto processava sua requisição',
+            message = {
+                message: 'Validation error while processing your request',
                 errors: messages
-            });
+            };
             break;
     }
-    done();
+    resp.status(code)
+        .json({ code, message });
 };
+function errorMessage(error) {
+    if (error.errors) {
+        const messages = [];
+        for (let message of error.errors) {
+            messages.push({ message });
+        }
+        return messages.length > 0
+            ? {
+                message: error.message,
+                errors: messages
+            }
+            : error.message;
+    }
+    return error.message;
+}
 //# sourceMappingURL=error.handler.js.map
