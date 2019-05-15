@@ -7,9 +7,9 @@ import { User } from "./src/users/users.model"
 let server: Server
 
 const beforeAllTests = () => {
-    environment.db.url = process.env.DB_TEST_URL || 'mongodb://localhost/erp-food-web-test'
+    environment.db.url = process.env.DB_TEST_URL || 'mongodb://localhost/template-web-test'
     environment.server.port = process.env.SERVER_PORT_TEST || 4001
-    environment.secutiry.jwtSecret = 'test-secret-erp-food-web'
+    environment.secutiry.jwtSecret = 'test-secret-template-web'
     server = new Server()
 
     return server.bootstrap([

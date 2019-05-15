@@ -9,7 +9,7 @@ export const authenticate: express.RequestHandler = (req: express.Request, resp:
     User.findByEmailOrLogin(login, email, '+password')
         .then(user => {
             if (user && user.matchesPassword(password)) {
-                const token = jwt.sign({ sub: user.email, iss: 'erp-food-web' }, environment.secutiry.jwtSecret)
+                const token = jwt.sign({ sub: user.email, iss: 'template-web' }, environment.secutiry.jwtSecret)
                 resp.json({
                     name: user.name,
                     email: user.email,
